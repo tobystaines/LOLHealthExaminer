@@ -1,0 +1,13 @@
+{
+    "hemorrhoids": [
+        "Does the patient have a family history of colon cancer in their first-degree relatives? (a first-degree relative is only a parent, sibling, or child)",
+        "Has the patient experienced minimal bright red blood per rectum?",
+        "Has the patient had significant loss of blood?",
+        "Does the patient have a history of skin problems?",
+        "Has the patient used hydrocortisone cream for the haemorrhoids that they are currently experiencing?",
+        "Were any high risk traits found on the patient's genetic test?",
+        "Has the patient had a colonoscopy in the last 5 years?",
+        "Has the patient had any recent foreign travel?",
+        "How long has the patient been known to healthcare services?"
+    ]
+}

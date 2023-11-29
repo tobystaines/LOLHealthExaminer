@@ -8,3 +8,4 @@ __pycache__/
 *.pyzw
 *.py~
 data/
+.DS_store
