@@ -11,6 +11,7 @@ import schema
 SYSTEM_ROLE = "You are an expert medical assistant. You give conscise, precise answers to medical questions. Answers must be in valid JSON format."
 
 key_details_parser = PydanticOutputParser(pydantic_object=schema.KeyPatientDetails)
+medication_parser = PydanticOutputParser(pydantic_object=schema.Medication)
 list_parser = CommaSeparatedListOutputParser()
 follow_up_question_parser = PydanticOutputParser(
     pydantic_object=schema.FollowUpQuestions
@@ -28,7 +29,8 @@ def get_key_details_message(patient_record: str) -> HumanMessage:
         prompt=PromptTemplate(
             template="""
                 {format_instructions}
-                Fill in the above data structure with information from this patient record:
+                Fill in the above data structure with information from the following patient record and your wider expert knowledge.
+
                 {patient_record}
             """,
             partial_variables={
@@ -45,11 +47,13 @@ def get_side_effects_message(medication: schema.Medication) -> HumanMessage:
         prompt=PromptTemplate(
             template="""
                 {format_instructions}
-                Fill in the above data structure with a list of known side effects for the following medication:
+                You have not provided any side effects for the following medication:
                 {medication}
+
+                Please return the medication information, this time including a complete list of known side effects in the "side_effects" element.
             """,
             partial_variables={
-                "format_instructions": list_parser.get_format_instructions(),
+                "format_instructions": medication_parser.get_format_instructions(),
             },
             input_variables=["medication"],
         )
@@ -82,7 +86,7 @@ def get_follow_up_questions_message(follow_up_questions: str) -> HumanMessage:
                 {format_instructions}
                 Fill in the above data structure with answers to the following questions.
                 Answers should be based on the previously provided patient record and your expert medical knowledge.
-                For each answer, justify your reasoning (i.e. provide conclusive evidence) and Provide a confidence score (where 10/10 is very confident).
+                For each answer, justify your reasoning (i.e. provide conclusive evidence) and provide a confidence score (where 10/10 is very confident).
                 If your answer is negative, you should only have high confidence if a negative answer can be determined explicitly from the provided information,
                 rather than simply there being a lack of evidence for a positive answer.
 

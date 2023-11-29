@@ -2,8 +2,9 @@
 
 import argparse
 import json
+import logging
+import os
 from pathlib import Path
-from typing import List
 
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import AIMessage, HumanMessage
@@ -11,6 +12,13 @@ from langchain.schema import AIMessage, HumanMessage
 import prompts
 import schema
 import utils
+
+logging.basicConfig(level=os.environ.get("LOG_LEVEL", "DEBUG"))
+log = logging.getLogger(__name__)
+
+FOLLOW_UP_QUESTIONS_LIBRARY = utils.load_json(
+    Path(__file__).parent / "questions_library.json"
+)
 
 MODEL = ChatOpenAI(
     model_name="gpt-3.5-turbo-1106",
@@ -36,38 +44,51 @@ def get_follow_up_questions_from_model(
     return follow_up_questions
 
 
-def process_file(input_file_path, output_file_path):
+def process_file(input_file_path: str, output_file_path: str) -> None:
     input_data = utils.extract_data_from_file(input_file_path)
 
+    log.info("Extracting key patient information from record")
     response = prompt_model(prompts.get_key_details_message(input_data))
     key_patient_details = prompts.key_details_parser.invoke(response)
-    # try:
-    #     key_patient_details = prompts.key_details_parser.invoke(key_patient_details)
-    # except ValueError as e:
-    #     for medication in key_patient_details.content.current_medication:
-    #         query_response = prompt_model(prompts.get_side_effects_message(medication))
 
-    follow_up_questions_library = utils.load_json(
-        Path(__file__).parent / "questions_library.json"
-    )
+    for medication in key_patient_details.current_medications:
+        if not medication.side_effects or any(
+            na in utils.strip_punctuation_lower(medication.side_effects[0])
+            for na in ["na", "notavailable", "none", "notspecified"]
+        ):
+            log.info(f"Side effects missing for {medication.name}. Re-querying model")
+            response = prompt_model(prompts.get_side_effects_message(medication))
+            updated_medication = prompts.medication_parser.invoke(response)
+            medication.side_effects = updated_medication.side_effects
 
     try:
+        log.info(
+            f"Looking for follow up questions for {key_patient_details.chief_complaint}"
+        )
         follow_up_questions = next(
             questions
-            for complaint, questions in follow_up_questions_library.items()
-            if complaint in key_patient_details.chielf_complaint
+            for complaint, questions in FOLLOW_UP_QUESTIONS_LIBRARY.items()
+            if complaint in key_patient_details.chief_complaint
         )
         follow_up_questions = schema.FollowUpQuestions(questions=follow_up_questions)
+        log.info(
+            f"Found follow up questions for {key_patient_details.chief_complaint} in library"
+        )
     except StopIteration:
+        log.info(
+            f"Failed to find follow up questions for {key_patient_details.chief_complaint} in library. Querying model for questions"
+        )
         follow_up_questions = get_follow_up_questions_from_model(
-            key_patient_details.chielf_complaint
+            key_patient_details.chief_complaint
         )
 
+    log.info(f"Asking follow up questions")
     response = prompt_model(
         prompts.get_follow_up_questions_message(follow_up_questions)
     )
     follow_up_answers = prompts.follow_up_answer_parser.invoke(response)
 
+    log.info("Asking for final decision")
     response = prompt_model(prompts.get_final_decision_message())
     final_decision = prompts.final_decision_parser.invoke(response)
 
@@ -80,6 +101,10 @@ def process_file(input_file_path, output_file_path):
 
     with open(output_file_path, "w") as f:
         json.dump(results.dict(), f)
+
+    log.info(
+        f"Results saved to {output_file_path}. Proposed treatment plan acceptable: {results.final_decision.treatment_plan_appropriate}"
+    )
 
 
 if __name__ == "__main__":

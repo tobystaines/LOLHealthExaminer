@@ -1,6 +1,6 @@
 {
     "hemorrhoids": [
-        "Does the patient have a family history of colon cancer in their first-degree relatives? (a first-degree relative is only a parent, sibling, or child)",
+        "Does the patient have a family history of colon cancer in their first-degree relatives? (a first-degree relative is only a parent, sibling, or child, not any other relation)",
         "Has the patient experienced minimal bright red blood per rectum?",
         "Has the patient had significant loss of blood?",
         "Does the patient have a history of skin problems?",

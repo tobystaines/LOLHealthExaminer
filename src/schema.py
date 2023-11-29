@@ -12,26 +12,16 @@ class Medication(BaseModel):
 
     # @validator("side_effects")
     # def side_effects_not_empty(cls, field):
-    #     if not field or strip_punctuation_lower(field[0]) in ["na", "notavailable"]:
+    #     if not field or any(na in strip_punctuation_lower(field[0]) for na in ["na", "notavailable", "none"]):
     #         raise ValueError("Missing side effects")
     #     return field
 
 
 class KeyPatientDetails(BaseModel):
-    chielf_complaint: str
+    chief_complaint: str
     proposed_treatment_plan: List[str]
     allergies: List[str]
     current_medications: List[Medication]
-
-
-class FollowUpQuestion(BaseModel):
-    question: str
-
-    # @validator("question")
-    # def question_ends_with_question_mark(cls, field):
-    #     if field[-1] != "?":
-    #         raise ValueError("Badly formed question!")
-    #     return field
 
 
 class FollowUpQuestions(BaseModel):
