@@ -10,12 +10,6 @@ class Medication(BaseModel):
     dosage: str
     side_effects: List[str]
 
-    # @validator("side_effects")
-    # def side_effects_not_empty(cls, field):
-    #     if not field or any(na in strip_punctuation_lower(field[0]) for na in ["na", "notavailable", "none"]):
-    #         raise ValueError("Missing side effects")
-    #     return field
-
 
 class KeyPatientDetails(BaseModel):
     chief_complaint: str

@@ -1,7 +1,4 @@
-from langchain.output_parsers import (
-    PydanticOutputParser,
-    CommaSeparatedListOutputParser,
-)
+from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 from langchain.prompts.chat import HumanMessagePromptTemplate
 from langchain.schema import HumanMessage, SystemMessage
@@ -12,7 +9,6 @@ SYSTEM_ROLE = "You are an expert medical assistant. You give conscise, precise a
 
 key_details_parser = PydanticOutputParser(pydantic_object=schema.KeyPatientDetails)
 medication_parser = PydanticOutputParser(pydantic_object=schema.Medication)
-list_parser = CommaSeparatedListOutputParser()
 follow_up_question_parser = PydanticOutputParser(
     pydantic_object=schema.FollowUpQuestions
 )
