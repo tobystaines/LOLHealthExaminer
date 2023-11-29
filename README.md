@@ -8,9 +8,9 @@ This tool can be run from the command line with `python src/main.py [input file 
 It will try to pick up two environment variables:
 
 - `LOG_LEVEL` (which defaults to `DEBUG`)
-- `OPENAI_API_KEY` - you'll need to have set this in you environment in advance
+- `OPENAI_API_KEY` - you'll need to have set this in your environment in advance
 
-You can also run LOLHealtExaminer with Docker (from the LOLHealthExaminer project root directory):
+You can also run LOLHealthExaminer with Docker (from the LOLHealthExaminer project root directory):
 
 ```bash
 docker build -t lol-health-examiner .
@@ -98,3 +98,4 @@ Alternatively, if we have a large enough dataset of previous records, questions 
 - I thought about setting this up to run in parallel on all files provided in a directory, but could not immediately find an answer to whethere the client was thread safe. Then I also thought that this might actually be better implemented on a serverless architecture (e.g. AWS lambda) so parallelisation there wouldn't be an issue.
 - I am new to langchain, but hopefully it's use and this approach in general should make it fairly easy to extend this solution to utilise additional LLM APIs and / or locally hosted models.
 - I didn't do any kind of cleaning of the data (apart from warning the LLM that it might have transcription errors and it should correct them if it found any). I think this is something that would be worth doing if time allowed.
+- Maybe if I wasn't such a cheapskate and upgraded to GPT-4 all of these issues would magically melt away!
