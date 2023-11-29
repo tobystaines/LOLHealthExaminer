@@ -15,7 +15,9 @@ def load_json(path):
 
 def strip_punctuation_lower(s: str):
     """Remove punctuation and spaces from a string and make all characters lower case"""
-    return s.translate(str.maketrans("", "", string.punctuation)).lower().replace(" ",  "")
+    return (
+        s.translate(str.maketrans("", "", string.punctuation)).lower().replace(" ", "")
+    )
 
 
 def extract_data_from_file(input_file_path: str) -> str:
