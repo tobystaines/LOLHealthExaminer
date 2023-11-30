@@ -13,7 +13,7 @@ import prompts
 import schema
 import utils
 
-logging.basicConfig(level=os.environ.get("LOG_LEVEL", "DEBUG"))
+logging.basicConfig(level=os.environ.get("LOG_LEVEL", "WARNING"))
 log = logging.getLogger(__name__)
 
 FOLLOW_UP_QUESTIONS_LIBRARY = utils.load_json(

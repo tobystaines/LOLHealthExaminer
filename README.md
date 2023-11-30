@@ -7,7 +7,7 @@ I asked ChatGPT to help me come up with a catchy or humerous name for this proje
 This tool can be run from the command line with `python src/main.py [input file location] [output file location]`. Input data must be in a `.txt` or `.pdf` file, and pdfs must contain text (not just an image of text - we're not doing any OCR here). Currently it will only operate on one file at a time.
 It will try to pick up two environment variables:
 
-- `LOG_LEVEL` (which defaults to `DEBUG`)
+- `LOG_LEVEL` (which defaults to `WARNING`)
 - `OPENAI_API_KEY` - you'll need to have set this in your environment in advance
 
 You can also run LOLHealthExaminer with Docker (from the LOLHealthExaminer project root directory):
