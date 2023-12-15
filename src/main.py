@@ -6,9 +6,7 @@ import logging
 import os
 from pathlib import Path
 
-from langchain.chat_models import ChatOpenAI
-from langchain.schema import AIMessage, HumanMessage
-
+from model import OpenAIChatModel
 import prompts
 import schema
 import utils
@@ -20,35 +18,24 @@ FOLLOW_UP_QUESTIONS_LIBRARY = utils.load_json(
     Path(__file__).parent / "questions_library.json"
 )
 
-MODEL = ChatOpenAI(
-    model_name="gpt-3.5-turbo-1106",
-    model_kwargs={"response_format": {"type": "json_object"}},
-)
-MESSAGES = [prompts.get_system_message()]
-
-
-def prompt_model(prompt: HumanMessage) -> AIMessage:
-    MESSAGES.append(prompt)
-    response = MODEL(MESSAGES)
-    MESSAGES.append(response)
-    return response
-
 
 def get_follow_up_questions_from_model(
-    cheif_complaint: str,
+    cheif_complaint: str, model: OpenAIChatModel
 ) -> schema.FollowUpQuestions:
-    response = prompt_model(
+    response = model.prompt(
         prompts.get_follow_up_questions_request_message(cheif_complaint)
     )
     follow_up_questions = prompts.follow_up_question_parser.invoke(response)
     return follow_up_questions
 
 
-def process_file(input_file_path: str, output_file_path: str) -> None:
+def process_file(
+    input_file_path: str, output_file_path: str, model: OpenAIChatModel
+) -> None:
     input_data = utils.extract_data_from_file(input_file_path)
 
     log.info("Extracting key patient information from record")
-    response = prompt_model(prompts.get_key_details_message(input_data))
+    response = model.prompt(prompts.get_key_details_message(input_data))
     key_patient_details = prompts.key_details_parser.invoke(response)
 
     for medication in key_patient_details.current_medications:
@@ -57,7 +44,7 @@ def process_file(input_file_path: str, output_file_path: str) -> None:
             for na in ["na", "notavailable", "none", "notspecified"]
         ):
             log.info(f"Side effects missing for {medication.name}. Re-querying model")
-            response = prompt_model(prompts.get_side_effects_message(medication))
+            response = model.prompt(prompts.get_side_effects_message(medication))
             updated_medication = prompts.medication_parser.invoke(response)
             medication.side_effects = updated_medication.side_effects
 
@@ -83,13 +70,13 @@ def process_file(input_file_path: str, output_file_path: str) -> None:
         )
 
     log.info(f"Asking follow up questions")
-    response = prompt_model(
+    response = model.prompt(
         prompts.get_follow_up_questions_message(follow_up_questions)
     )
     follow_up_answers = prompts.follow_up_answer_parser.invoke(response)
 
     log.info("Asking for final decision")
-    response = prompt_model(prompts.get_final_decision_message())
+    response = model.prompt(prompts.get_final_decision_message())
     final_decision = prompts.final_decision_parser.invoke(response)
 
     results = schema.Results(
@@ -115,6 +102,13 @@ if __name__ == "__main__":
         "input_file_path", help="Path to the input medical record file."
     )
     parser.add_argument("output_file_path", help="Path to the output JSON file.")
+    parser.add_argument(
+        "--model_name",
+        nargs="?",
+        help="Name of the LLM to use. Currently must be an Open AI chat model",
+        default="gpt-3.5-turbo-1106",
+    )
     args = parser.parse_args()
 
-    process_file(args.input_file_path, args.output_file_path)
+    model = OpenAIChatModel(args.model_name)
+    process_file(args.input_file_path, args.output_file_path, model)
